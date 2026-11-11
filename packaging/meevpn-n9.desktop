@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=MeeVPN
+Comment=OpenVPN client for the Nokia N9
+Exec=/usr/bin/python /opt/meevpn-n9/app/main.py
+Icon=/usr/share/icons/hicolor/80x80/apps/meevpn-n9.png
+Categories=Network;

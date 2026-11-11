@@ -1,0 +1,16 @@
+Package: meevpn-n9
+Version: @VERSION@
+Architecture: armel
+Section: user/network
+Priority: optional
+Maintainer: smyhu <smyhu@users.noreply.github.com>
+Depends: openvpn-n9 (>= 2.5.11-4), python (>= 2.6), python-pyside.qtdeclarative, python-pyside.qtgui, python-dbus, qt-components
+Installed-Size: @SIZE@
+Description: MeeVPN - OpenVPN client app for the Nokia N9
+ Connect and disconnect with one tap, .ovpn profiles from MyDocs/openvpn,
+ user name and password login (auth-user-pass), optional DNS from the VPN
+ server, connection details and log. Uses OpenVPN 2.5 from openvpn-n9.
+ Designed and written by Claude (Anthropic) together with smyhu.
+XB-Maemo-Display-Name: MeeVPN
+XB-Maemo-Icon-26:
+@ICON@
