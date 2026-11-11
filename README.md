@@ -1,7 +1,7 @@
 # MeeVPN – OpenVPN client app for the Nokia N9
 
 MeeVPN connects your Nokia N9 (MeeGo Harmattan PR1.3) to an OpenVPN server with one tap.
-It is the graphical front end for the `openvpn-n9` package (OpenVPN 2.5.11 built against
+It is the graphical front end for [openvpn-n9](https://github.com/smyhu/openvpn-n9) (OpenVPN 2.5.11 built against
 OpenSSL 1.0.2u, so it works with current servers: TLS 1.2, AES-256-GCM).
 
 ![MeeVPN screenshots](art/screenshots.png)
