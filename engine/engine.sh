@@ -26,6 +26,11 @@ cmd_start() {
     [ -f "$P" ] || { echo "ERROR no-profile $P"; exit 2; }
     [ -x $OV ] || { echo "ERROR no-openvpn (install openvpn-n9)"; exit 3; }
     if running; then echo "ERROR already-running"; exit 4; fi
+    # a process that is still saying goodbye to the server (or one started
+    # some other way) would make a second tunnel with the same profile
+    i=0
+    while pidof openvpn >/dev/null 2>&1 && [ $i -lt 8 ]; do sleep 1; i=$((i+1)); done
+    if pidof openvpn >/dev/null 2>&1; then echo "ERROR already-running (another openvpn process)"; exit 4; fi
     mkdir -p /var/log $RUN
     chmod 755 $RUN
     rm -f $RUN/auth.txt
@@ -41,6 +46,8 @@ cmd_start() {
      tr -d '\r' < "$P" | sed -e 's/^\(remote [^ ]* [0-9]* udp\) *$/\14/' -e 's/^\(remote [^ ]* [0-9]* tcp\) *$/\14/' \
         -e 's/^proto udp *$/proto udp4/' -e 's/^proto tcp *$/proto tcp4/' -e 's/^proto tcp-client *$/proto tcp4-client/' \
         -e '/^socket-flags/d' > "$C"
+     # the profile may end without a newline: start our lines on a new one
+     [ -n "$(tail -c 1 "$C")" ] && echo >> "$C"
      grep -q '^proto ' "$C" || echo "proto udp4" >> "$C"
      if [ $AUTH = 1 ]; then
         sed -i -e "s#^auth-user-pass *\$#auth-user-pass $RUN/auth.txt#" -e "s#^auth-user-pass .*#auth-user-pass $RUN/auth.txt#" "$C"
@@ -53,7 +60,7 @@ cmd_start() {
         set -- --script-security 1 --pull-filter ignore "dhcp-option"
     fi
     $OV --cd "$DIR" --config "$C" --daemon openvpn-n9 --log $LOG --writepid $PID \
-        "$@" --pull-filter ignore "block-outside-dns" --pull-filter ignore "remote-cache-lifetime" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "route-ipv6"
+        "$@" --pull-filter ignore "block-outside-dns" --pull-filter ignore "remote-cache-lifetime" --pull-filter ignore "client-ip" --pull-filter ignore "reneg-sec" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "route-ipv6"
     rc=$?
     chmod 644 $LOG 2>/dev/null
     if [ $rc != 0 ]; then
@@ -66,7 +73,11 @@ cmd_start() {
 }
 
 cmd_stop() {
+    P=$(cat $PID 2>/dev/null)
     $STOPPER
+    # wait until OpenVPN has really ended (it first tells the server goodbye)
+    i=0
+    while [ -n "$P" ] && [ -d /proc/$P ] && [ $i -lt 8 ]; do sleep 1; i=$((i+1)); done
     # openvpn's own --down normally restores DNS; this covers a crashed process
     i=0
     while [ -f $RUN/dns.active ] && [ $i -lt 6 ]; do sleep 1; i=$((i+1)); done

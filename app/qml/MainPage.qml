@@ -9,6 +9,7 @@ Page {
 
     property string vpnState: "off"      // off | connecting | on
     property bool pending: false          // helper (start/stop) still running
+    property bool stopping: false         // the running helper call is a stop
     property string profile: ""
     property string profileLabel: ""
     property variant info: ({})
@@ -37,7 +38,7 @@ Page {
     function toggle() {
         if (page.pending) return;
         if (page.vpnState != "off") {
-            if (vpn.disconnectVpn()) page.pending = true;
+            if (vpn.disconnectVpn()) { page.pending = true; page.stopping = true; }
             return;
         }
         if (page.profile == "") {
@@ -45,7 +46,7 @@ Page {
             return;
         }
         var res = vpn.connectVpn(page.profile);
-        if (res == "") { page.pending = true; page.errorText = ""; }
+        if (res == "") { page.pending = true; page.stopping = false; page.errorText = ""; }
         else if (res == "login") login.openFor(page.profile, page.profileLabel);
         else if (res != "busy") appWindow.showBanner(tr("e_" + res));
     }
@@ -80,7 +81,7 @@ Page {
     Header {
         id: header
         text: "MeeVPN"
-        subText: page.pending ? (page.vpnState == "off" ? tr("connecting") : tr("stopping"))
+        subText: page.pending ? (page.stopping ? tr("stopping") : tr("connecting"))
                  : page.vpnState == "on" ? tr("on") + " · " + S.duration(page.info.since > 0 ? page.info.now - page.info.since : 0)
                  : tr(page.vpnState)
     }
@@ -102,7 +103,7 @@ Page {
         }
         // pulsing while connecting
         SequentialAnimation {
-            running: page.vpnState == "connecting" || (page.pending && page.vpnState == "off")
+            running: !page.stopping && (page.vpnState == "connecting" || (page.pending && page.vpnState == "off"))
             loops: Animation.Infinite
             NumberAnimation { target: onRing; property: "opacity"; to: 0.75; duration: 700; easing.type: Easing.InOutQuad }
             NumberAnimation { target: onRing; property: "opacity"; to: 0.1; duration: 700; easing.type: Easing.InOutQuad }

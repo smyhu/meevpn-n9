@@ -19,7 +19,7 @@ from PySide.QtCore import QObject, QUrl, QProcess, QSettings, Signal, Slot
 from PySide.QtGui import QApplication
 from PySide.QtDeclarative import QDeclarativeView
 
-APP_VERSION = '0.1.2'
+APP_VERSION = '0.1.4'
 BASE = '/opt/meevpn-n9'
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 HELPER = os.path.join(BASE, 'bin', 'meevpn-root')
@@ -314,9 +314,16 @@ class Vpn(QObject):
         else:
             # show an error only when OpenVPN ended by itself (not stopped by the user,
             # not still shutting down); warnings about pushed options are not errors
-            stopped = [l for l in tail if 'SIGTERM[hard' in l or 'SIGINT[hard' in l]
+            stopped = [l for l in tail if 'SIGTERM[hard' in l or 'SIGINT[hard' in l
+                       or 'SIGTERM received' in l or 'exit-with-notification' in l]
             ended = [l for l in tail if 'process exiting' in l or 'Exiting due to fatal error' in l]
-            if ended and not stopped:
+            # a log from before the phone was switched on is history, not an error
+            try:
+                booted = time.time() - float(read_file('/proc/uptime').split()[0])
+                old_log = os.path.getmtime(LOG_FILE) < booted
+            except (OSError, ValueError, IndexError):
+                old_log = False
+            if ended and not stopped and not old_log:
                 for l in reversed(tail):
                     if '[PUSH-OPTIONS]' in l:
                         continue
