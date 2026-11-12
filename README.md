@@ -22,7 +22,7 @@ so MeeVPN forces IPv4 and ignores IPv6 settings pushed by the server.
 ## Install
 
 1. Install `openssl-n9` and `openvpn-n9` (both are in [MeeRevive](https://github.com/smyhu/meerevive-n9)).
-2. Install [`dist/meevpn-n9_0.1.2_armel.deb`](dist/) with `aegis-dpkg -i` as root (plain `dpkg` does not grant the Aegis credentials).
+2. Install [`dist/meevpn-n9_0.1.4_armel.deb`](dist/) with `aegis-dpkg -i` as root (plain `dpkg` does not grant the Aegis credentials).
    MeeRevive installs all three packages in the right order.
 3. Copy your provider's `.ovpn` file to `MyDocs/openvpn` (e.g. over USB) and open MeeVPN.
 
